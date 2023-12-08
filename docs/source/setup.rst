@@ -7,6 +7,7 @@ Libraries
 ----------------
 
 .. code-block:: R
+   
    library(tidyverse)  # for better data.frame manipulation
    library(dplyr)  # for easier transformations of the data.frame
    library(validate)  # for validation of data
