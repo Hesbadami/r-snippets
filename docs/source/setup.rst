@@ -1,5 +1,5 @@
 Setup
-====
+================
 
 .. _libraries:
 
@@ -18,23 +18,19 @@ Libraries
    library(xgboost)  # for xgboost
    library(caret)  # for xgboost
 
-Creating recipes
+Reading Data
 ----------------
 
-To retrieve a list of random ingredients,
-you can use the ``lumache.get_random_ingredients()`` function:
+CSV:
 
-.. autofunction:: lumache.get_random_ingredients
+.. code-block:: r
 
-The ``kind`` parameter should be either ``"meat"``, ``"fish"``,
-or ``"veggies"``. Otherwise, :py:func:`lumache.get_random_ingredients`
-will raise an exception.
+   data = read.csv('data.csv')
 
-.. autoexception:: lumache.InvalidKindError
+Rda:
 
-For example:
+.. code-block:: r
+   
+   load('data.csv')
 
->>> import lumache
->>> lumache.get_random_ingredients()
-['shells', 'gorgonzola', 'parsley']
-
+Loading an `rda` ``Rda`` loads the data into a its default variable name.

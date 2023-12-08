@@ -14,4 +14,11 @@ Contents
 
 .. toctree::
    setup
-   api
+   quality
+   EDAplan
+   EDAexec
+   EDAsummary
+   premodeling
+   modeling
+   tests
+   plots
