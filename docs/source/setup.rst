@@ -6,7 +6,7 @@ Setup
 Libraries
 ----------------
 
-.. code-block:: R
+.. code-block:: r
    
    library(tidyverse)  # for better data.frame manipulation
    library(dplyr)  # for easier transformations of the data.frame
