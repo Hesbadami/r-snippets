@@ -18,7 +18,6 @@ Contents
    EDAplan
    EDAexec
    EDAsummary
-   premodeling
+   modelingplan
+   preprocessing
    modeling
-   tests
-   plots
