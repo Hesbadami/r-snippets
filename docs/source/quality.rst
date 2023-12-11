@@ -15,6 +15,7 @@ Quality Check Plan
    2. `summary` and `validator` offer insight on missing values and invalid values. Possible invalid or implausible values are:
       * Non positive `alpha`, `golf`.
       * Positive `juliett`, `bravo`.
+      * Non integer values in `alpha`, `bravo`
       * `bravo`, `charlie` more than 1024.
       * `quebec` not in *quebec1*, *quebec2*, *quebec3*.
       * `alpha` more than 128 for `golf` less than 128.
@@ -33,38 +34,38 @@ Quality Check Execution
 ----------------
 .. code-block:: r
 
-   str(data)
+   str(df)
 
 .. code-block:: r
 
-   summary(data)
+   summary(df)
 
 .. code-block:: r
 
-   unique(data$quebec)
-   unique(data$whiskey)
-   unique(data$echo)
+   unique(df$quebec)
+   unique(df$whiskey)
+   unique(df$echo)
 
 .. code-block:: r
 
    rules = validator(
-
       alpha > 0,
       golf > 0,
       bravo < 1024,
       charlie < 1024,
+      round(age) == age,  # should be integer
       quebec %in% c('quebec1', 'quebec2', 'quebec3'),
       ((alpha <= 128) | (golf >= 128)), # alpha cannot be more than 128 unless golf is more than 128
       ((alpha >= 128) | (golf <= 128)), # alpha cannot be less than 128 unless golf is less than 128
    )
 
-   cf = confront(data, rules)
+   cf = confront(df, rules)
    summary(cf)
    plot(cf)
 
 .. code-block:: r
 
-   count = sum(duplicated(cats))
+   count = sum(duplicated(df))
    cat(count, "duplicates observed")
 
 .. code-block:: r
@@ -88,7 +89,7 @@ Quality Check Execution
       return plots
    }
 
-   boxplots = get_boxplots(data)
+   boxplots = get_boxplots(df)
    do.call(grid.arrange, boxplots)
 
 Quality Check Findings
@@ -109,6 +110,7 @@ Quality Check Findings
       * 32 non positive values in `alpha`, `golf`.
       * 64 positive values in `juliett`, `bravo`.
       * 8 values above 1024 in `bravo`, `charlie`.
+      * `age` has a value which is not integer.
       * Category "qebec2" looks like a typo for `quebec`.
       * `alpha` has 16 invalid values too high for it's corresponding `golf`.
       * `alpha` has 4 invalid values too low for it's corresponding `golf`.
@@ -122,6 +124,8 @@ Quality Check Findings
 Cleaning Plan
 ----------------
 .. code-block:: md
+
+   We should drop the rows containing non integer values for age before fixing it's data type to integer because then they would be rounded to 0 and lost.
 
    1. Data types should be modified as follows:
       * Data types for `xray`, `yankee`, `zulu` should change to character.
@@ -153,31 +157,35 @@ Cleaning Plan
 Cleaning Execution
 ----------------
 .. code-block:: r
+   # drop the rows containing non integer `age`
+   df = df[round(df$age) == df$age,]
+
+.. code-block:: r
 
    # `xray`, `yankee`, `zulu` to character.
    for (col in c('xray', 'yankee', 'zulu')) {
-      data[[col]] = as.character(data[[col]])
+      df[[col]] = as.character(df[[col]])
    }
 
    # `alpha`, `bravo`, `charlie` to integers
    for (col in c('alpha', 'bravo', 'charlie')) {
-      data[[col]] = as.integer(data[[col]])
+      df[[col]] = as.integer(df[[col]])
    }
 
    # `golf`, `hotel`, `juliett` to double float number.
    for (col in c('golf', 'hotel', 'juliett')) {
-      data[[col]] = as.numeric(data[[col]])
+      df[[col]] = as.numeric(df[[col]])
    }
 
    # `quebec`, `whiskey`, `echo` to factor
    for (col in c('quebec', 'whiskey', 'echo')) {
-      data[[col]] = as.factor(data[[col]])
+      df[[col]] = as.factor(df[[col]])
    }
 
 .. code-block:: r
 
-   data = data |> mutate(quebec = recode(quebec, 'qebec2' = 'quebec2')) 
-   data = data |> filter(
+   df = df |> mutate(quebec = recode(quebec, 'qebec2' = 'quebec2')) 
+   df = df |> filter(
       alpha > 0,
       golf > 0,
       bravo < 1024,
@@ -190,7 +198,7 @@ Cleaning Execution
 
    # Data is grouped by golf.range and echo
    # whiskey missing values are replaced by the mean of each group.
-   data = data |>
+   df = df |>
       mutate(golf.range = cut(golf, breaks = 5)) |>
       group_by(golf.range, echo) |>
       mutate(
@@ -205,20 +213,20 @@ Cleaning Execution
       )
 
    # We set the ones belonging to "hotel1" from hotel to 0. We do this after imputation so that it doesn't affect the mean values.
-   data = data |> mutate(whiskey = ifelse(
+   df = df |> mutate(whiskey = ifelse(
       hotel == 'hotel1',
       0,
       whiskey
    ))
 
    # For any remaining NA values due to a group missing all values, we replace with the mean of the whole column.
-   data = data |> mutate(whiskey = replace_na(whiskey, mean(whiskey, na.rm = TRUE)))
+   df = df |> mutate(whiskey = replace_na(whiskey, mean(whiskey, na.rm = TRUE)))
    
 .. code-block:: r
 
    # Data is grouped by golf.range and echo
    # hotel missing values are replaced by the mode of each group.
-   data = data |>
+   df = df |>
       mutate(golf.range = cut(golf, breaks = 5)) |>
       group_by(golf.range, echo) |>
       mutate(
@@ -231,44 +239,44 @@ Cleaning Execution
       select(-golf.range)
 
    # We set the ones belonging to "quebec1" from quebec to "hotel_unknown". We do this after imputation in case they consist the majority of the column.
-   data = data |> mutate(hotel = ifelse(
+   df = df |> mutate(hotel = ifelse(
       quebec == 'quebec1',
       'hotel_unknown',
       hotel
    ))
 
    # For the remaining NA due to a group missing all values, we replace with the mean of the whole column.
-   data = data |> mutate(hotel = replace_na(hotel, mfv(hotel, na_rm = TRUE)[1]))
+   df = df |> mutate(hotel = replace_na(hotel, mfv(hotel, na_rm = TRUE)[1]))
 
-   data$hotel = as.factor(mydf$hotel)  # to perserve data types and remain class-safe
+   df$hotel = as.factor(df$hotel)  # to perserve data types and remain class-safe
    
 .. code-block:: r
 
    not_outlier_mask = 1
    for (col in c('bravo', 'charlie')){
       not_outlier_mask = not_outlier_mask * (
-         data[[col]] > quantile(data[[col]], 0.25) - 1.5*IQR(data[[col]])
+         df[[col]] > quantile(df[[col]], 0.25) - 1.5*IQR(df[[col]])
       ) * (
-         data[[col]] < quantile(data[[col]], 0.75) + 1.5*IQR(data[[col]])
+         df[[col]] < quantile(df[[col]], 0.75) + 1.5*IQR(df[[col]])
       )
    }
 
    # data w/o outliers
-   data_woo = data[as.logical(not_outlier_mask), ]
+   df_woo = df[as.logical(not_outlier_mask), ]
 
    # model w/ outliers
-   model_o = lm(juliett ~ bravo + charlie, data)
+   model_o = lm(juliett ~ bravo + charlie, df)
    summary(model_o)
    
    # model w/o outliers
-   model_woo = lm(jupiett ~ bravo + charlie, data_woo)
+   model_woo = lm(jupiett ~ bravo + charlie, df_woo)
    summary(model_woo)
 
 .. role:: rinline(code)
    :language: r
 
-If the model is not affected negatively, we're allowed to remove the outliers;    :rinline:`data = data_woo`.
+If the model is not affected negatively, we're allowed to remove the outliers;    :rinline:`df = df_woo`.
    
 .. code-block:: r
 
-   data = data[!duplicated(data), ]
+   df = df[!duplicated(df), ]

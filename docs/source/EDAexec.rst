@@ -275,7 +275,7 @@ Numerical *vs.* categorical
     }
     
     anova_results_table = as.data.frame(t(as.data.frame(aov_tests, row.names = "Pr(>F)"))) |> arrange(.data[["Pr(>F)"]])
-    anova_results_tablea
+    anova_results_table
 
 **ANCOVA**
 
@@ -320,7 +320,7 @@ Numerical *vs.* categorical
                 if (y != x2) {
                     figure = ggplot(
                         df,
-                        aes(y=.data[[y]], x=.data[[x1]], color=.data[[x2]])
+                        aes(y=.data[[y]], x=.data[[x2]], color=.data[[x1]])
                     ) +
                     geom_point() +
                     geom_smooth(method = 'lm', formula = 'y~x')

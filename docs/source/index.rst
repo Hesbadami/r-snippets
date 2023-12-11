@@ -9,6 +9,8 @@ It has everything prepared for you.
 
    This project is under active development.
 
+   Alternate hypothesis of prop.test is not to prove the given proportion, but to debunk the proportion of 0.5.
+
 Contents
 --------
 
